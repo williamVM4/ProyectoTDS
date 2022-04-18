@@ -1,0 +1,20 @@
+
+	MC = Master Clock
+	CL = Clocks de las maquinas
+	Serv = Servidor 
+	Est = Estado del servidor
+	NumCola = Numero en cola
+	MC	CL1	CL2	CL3	CL4	Serv 1	Est.1  NumCola
+	0.0	3.0	2.0	5.0	4.0	1000.0	  0		0	
+	2.0	3.0	ppnf	5.0	4.0	6.0	  	  1		0	
+	3.0	pps	ppnf	5.0	4.0	6.0	  	  1		1	
+	4.0	pps	ppnf	5.0	pps	6.0	  	  1		2	
+	5.0	pps	ppnf	pps	pps	6.0	  	  1		3	
+	6.0	ppnf	13.0	pps	pps	10.0	  	  1		2	
+	10.0	17.0	13.0	pps	ppnf	14.0	  	  1		1	
+	13.0	17.0	pps	pps	ppnf	14.0	  	  1		2	
+	14.0	17.0	pps	ppnf	21.0	18.0	  	  1		1	
+	17.0	pps	pps	ppnf	21.0	18.0	  	  1		2	
+	18.0	pps	ppnf	25.0	21.0	22.0	  	  1		1	
+
+	Number Delayed: 5
