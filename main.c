@@ -40,7 +40,7 @@ int numberDelayed;
 float cl[100],arruinar,reparar,mc,n;
 int numCola=0, estadoServidor[20], atendiendo;
 /*Variables para guardar el numero de Maquinas, servidores y contadores auxiliares-----*/
-int contadorM, contadorS, i,j;
+int contadorM=0, contadorS=0, i,j;
 FILE *outfile;
 
 
@@ -63,31 +63,41 @@ void  inicializar(void){
 	lista_eventos = NULL;
 	mc = 0;
 	//Lee el numero de maquinas y de servidores en las variables contador
-	printf("Ingrese el numero de maquinas: \n");
-	scanf("%i", &contadorM);
-	printf("Ingrese el numero de servidores: \n");
+	while(contadorM<=0){
+		printf("Ingrese un numero de maquinas: \n");
+		scanf("%i", &contadorM);	
+	}
+	while(contadorS<=0){
+	printf("Ingrese un numero de servidores: \n");
 	scanf("%i", &contadorS);
+	}
 	i = 0;
 	//Llena el vector cl con las maquinas primero y despues los servidores
 	while(i<(contadorM+contadorS)){
 		if(i<contadorM){
-			printf("Ingrese el valor del clock de la maquina %i: \n",(i+1));
+			printf("Ingrese el valor del clock de la maquina %i en minutos: \n",(i+1));
 			scanf("%f", &cl[i]);
 		}else{
 			
-			printf("Ingrese el valor del clock del servidor %i: \n",(i+1-contadorM));
+			printf("Ingrese el valor del clock del servidor %i en minutos: \n",(i+1-contadorM));
 			scanf("%f", &cl[i]);
 		}
 		i = i+1;
 	}
 	//Lee los valores de tiempo de fallo de maquinas y tiempo de reperacion de servidores
-	printf("Ingrese el tiempo que tardan en fallar las maquinas: \n");
-	scanf("%f", &arruinar);
-	printf("Ingrese el tiempo que tardan en reparar los servidores: \n");
-	scanf("%f", &reparar);
+	while(arruinar<=0){
+		printf("Ingrese el tiempo que tardan en fallar las maquinas en minutos: \n");
+		scanf("%f", &arruinar);
+	}
+	while(reparar<=0){
+		printf("Ingrese el tiempo que tardan en reparar los servidores en minutos: \n");
+		scanf("%f", &reparar);
+	}
 	//Lee el valor del tiempo de la simulacion en minutos
-	printf("Ingrese el tiempo de la simulacion en min: \n");
-	scanf("%f", &n);
+	while(n<=0){
+		printf("Ingrese el tiempo de la simulacion en min: \n");
+		scanf("%f", &n);
+	}
 	//se llena la lista de eventos
 	i = 0;
 	while(i<(contadorM+contadorS)){
@@ -102,7 +112,9 @@ void  inicializar(void){
 		i = i+1;
 	}
 	//Se imprimien las cabeceras de la tabla
-	fprintf(outfile,"\n\tMC = Master Clock\n\tCL = Clocks de las maquinas\n\tServ = Servidor \n\tEst = Estado del servidor\n\tNumCola = Numero en cola\n");
+	fprintf(outfile,"\tSimulación de modelo interferencia de Máquinas.");
+	fprintf(outfile,"\n\tAutores:\n\t\tChicas Duarte, Herbert Daniel - CD17008\n\t\tMiguel Chinchilla, Benneth Daniel - MC15048\n\t\tMenjivar Sandoval, Delmy Stefany - MS12016\n\t\tPortillo Ventura, Kevin Enrique - PV17028\n\t\tVásquez Mancia, William Enrique - VM19003\n");
+	fprintf(outfile,"\n\tMC = Master Clock\n\tCL = Clocks de las maquinas\n\tServ = Servidor i\n\tEst = Estado del servidor i\n\tNumCola = Numero en cola del sistema\n\tNumSistema = Numero total en el sistema\n\n");
 	fprintf(outfile,"	MC	");
 	i = 0;
 	while(i<(contadorM+contadorS)){
@@ -118,7 +130,7 @@ void  inicializar(void){
 		fprintf(outfile,"Est.%i  ", i+1);
 		i = i+1;
 	}
-	fprintf(outfile,"NumCola\n");
+	fprintf(outfile,"NumCola\tNumSistema\n");
 	//Se imprimen los valores inciales
 	imprimirDatos();
 	
@@ -247,6 +259,7 @@ void salida(void){
 }
 /*Imprime los datos de los clocks de maquinas y serviores en forma de tabla en un documento txt externo-----*/
 void imprimirDatos(void){
+	if(mc<=n){
 	int a;
 		fprintf(outfile,"	%.1f\t",mc);
 		i = 0;
@@ -300,9 +313,11 @@ void imprimirDatos(void){
 			fprintf(outfile,"  %i\t",estadoServidor[i]);
 			i = i+1;
 		}
-		fprintf(outfile,"\t%i\t\n",numCola);
+		fprintf(outfile,"\t%i\t\t%i\t\n",numCola,numCola+atendiendo);
+	}
 }
 /*Imprime los datos de los estadisticos en un documento txt externo-----*/
 void imprimirEstadisticos(void){
+	fprintf(outfile,"\n\t-----Estadisticos -----");
 	fprintf(outfile,"\n\tNumber Delayed: %i",numberDelayed);
 }
