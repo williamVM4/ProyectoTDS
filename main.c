@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-//se incluye el archivo de los metodos de las listas
+/*se incluye el archivo de los metodos de la lista y de la cola*/
 #include "lista_eventos.h"
 #include "cola_servidor.h"
 struct node{
@@ -22,8 +22,7 @@ void salida(void);
 void imprimirDatos(void);
 void imprimirEstadisticos(void);
 
-
-//Aqui se van a definir las variables a utilizar-----
+/*Aqui se van a definir las variables a utilizar-----*/
 //Lista de eventos, este puntero siempre apunta al menor de la lista
 struct node* lista_eventos;
 //Cola del servidor, este puntero apunta al ultimo de la cola y hay que crear otros metodos para esta cola esta no saca en orden como la lista de eventos
@@ -33,14 +32,14 @@ struct node* cola_servidor_raiz;
 //Este nodo se ocupa para eliminar de la lista de eventos y guarda el nodo que se saca de la lista
 struct node* eliminar;
 struct node* aux;
-//Numero de eventos
+//Constantes a utilizar
 int LLEGADA = 1, SALIDA = 2;
 int OCUPADO =1, DESOCUPADO = 0;
+/*Variables que se van a utilizar en la impresion y para controlar la simulación-----*/
 int numberDelayed;
 float cl[100],arruinar,reparar,mc,n;
 int numCola=0, estadoServidor[20], atendiendo;
-//Estos son los valores de los clocks o maquinas, el cl0 es el clock del servidor
-//Esto servirira para un numero fijo pero si se pone que se pueda cambiar el numero de maquinas deberia cambiarse a un arreglo
+/*Variables para guardar el numero de Maquinas, servidores y contadores auxiliares-----*/
 int contadorM, contadorS, i,j;
 FILE *outfile;
 
@@ -48,7 +47,7 @@ FILE *outfile;
 int main(int argc, char *argv[]) {
 	outfile = fopen("inteferencia-maquinas.out", "w");
 	inicializar();
-	//Aqui debe haber un loop que esto se va a repetir hasta que mc sea 480
+	//Ciclo que controla el tiempo de la ejecucion
 	while(mc<n){
 		avanzarTiempo();	
 	}
@@ -56,17 +55,20 @@ int main(int argc, char *argv[]) {
 	return 0;
 }
 
-//Lo que tiene que hacer este metodo es leer los valores iniciales aqui se los asigne automaticamente y crear la lista de eventos.
+/*Lee los valores iniciales ingresados por consola y crea la lista de eventos.-----*/
 void  inicializar(void){
-	//esta es la lista de eventos
+	//Se inicializan las variables a 0
 	numberDelayed = 0;
+	numCola = 0;
 	lista_eventos = NULL;
-	//asigna los valores, si se tomaran en cuenta mas maquinas tendria que llenarse el arreglo
+	mc = 0;
+	//Lee el numero de maquinas y de servidores en las variables contador
 	printf("Ingrese el numero de maquinas: \n");
 	scanf("%i", &contadorM);
 	printf("Ingrese el numero de servidores: \n");
 	scanf("%i", &contadorS);
 	i = 0;
+	//Llena el vector cl con las maquinas primero y despues los servidores
 	while(i<(contadorM+contadorS)){
 		if(i<contadorM){
 			printf("Ingrese el valor del clock de la maquina %i: \n",(i+1));
@@ -78,11 +80,13 @@ void  inicializar(void){
 		}
 		i = i+1;
 	}
+	//Lee los valores de tiempo de fallo de maquinas y tiempo de reperacion de servidores
 	printf("Ingrese el tiempo que tardan en fallar las maquinas: \n");
 	scanf("%f", &arruinar);
 	printf("Ingrese el tiempo que tardan en reparar los servidores: \n");
 	scanf("%f", &reparar);
-	printf("Ingrese el tiempo de la simulacion: \n");
+	//Lee el valor del tiempo de la simulacion en minutos
+	printf("Ingrese el tiempo de la simulacion en min: \n");
 	scanf("%f", &n);
 	//se llena la lista de eventos
 	i = 0;
@@ -92,12 +96,12 @@ void  inicializar(void){
 		}
 		i = i+1;
 	}
-	
+	//Los servidores se inicializan en desocupados
 	while(i<contadorS){
 		estadoServidor[i] = DESOCUPADO;
 		i = i+1;
 	}
-	numCola = 0;
+	//Se imprimien las cabeceras de la tabla
 	fprintf(outfile,"\n\tMC = Master Clock\n\tCL = Clocks de las maquinas\n\tServ = Servidor \n\tEst = Estado del servidor\n\tNumCola = Numero en cola\n");
 	fprintf(outfile,"	MC	");
 	i = 0;
@@ -115,14 +119,16 @@ void  inicializar(void){
 		i = i+1;
 	}
 	fprintf(outfile,"NumCola\n");
+	//Se imprimen los valores inciales
 	imprimirDatos();
 	
 }
-
+/*Avanza el master clock hasta el menor valor de clock de la lista de eventos.-----*/
 void avanzarTiempo(void){
 	eliminar = NULL;
 	if (lista_eventos != NULL){
 		mc = lista_eventos->clock;
+		//Si el evento es de tipo llegada ejecuta el metodo llegada y si es salida ejecuta el metodo salida
 		if(lista_eventos->type == LLEGADA){
 			lista_eventos = removeNode(lista_eventos, &eliminar);
 			llegada();
@@ -137,25 +143,23 @@ void avanzarTiempo(void){
 	}
 }
 
+/*Ingresa el evento en la cola del servidor, si hay servidores desocupados empieza a ser atendido y programa el evento de salida de esa maquina.-----*/
 void llegada(void){
-	/*ay que crear los metodos de la cola en otros archivos asi como hice los de la lista de eventos lo unico que va a cambiar es que meta siempre 
-	el que entra al final de la cola y saque el primero.
-	poner un if que si la cola que esta definida arriba es null es porque no hay nadie en cola que cambie el estado del servidor a 1 y que programe el 
-	cl0 con un evento de salida
-	algo asi como
-	cl0 = mc + reparar;
-	lista_eventos = insertNode(lista_eventos,createNode(SALIDA,cl0,0));
-	pero si cola_servidor no es null es que ya hay alguien entonces solo agregar a la cola y no programar la salida y actualizar las variables */
+	//Variable auxiliar para verificar si hay servidores desocupados
 	int desocupados = 0;
+	//Verifica si la cola esta vacia
 	if(cola_servidor_raiz == NULL){
+		//Inserta el evento en la cola, empieza a ser atendido y programa su salida
 		insertNodeServidor(&cola_servidor_raiz,&cola_servidor_tope,eliminar);
 		numberDelayed = numberDelayed + 1;
 		lista_eventos = insertNode(lista_eventos,createNode(SALIDA,mc+reparar,contadorM));
+		//Actualiza el valor del servidor y cambia su estado, ademas de las otras variables
 		cl[contadorM] = mc+ reparar;
 		estadoServidor[0] = OCUPADO;
 		atendiendo = 1;
 		numCola = 0;
 	}else{
+		//Verifica si hay servidores desocupados
 		i=0;
 		while(i<contadorS){
 				if(estadoServidor[i] == DESOCUPADO){
@@ -167,7 +171,9 @@ void llegada(void){
 		if(desocupados == 1){
 			i=0;
 			while(i<contadorS){
+					//Busca el servidor desocupado
 					if(estadoServidor[i] == DESOCUPADO){
+						//Inserta el evento en cola pero empieza a ser atendido, se programa su salida y se actualizan varoles del servidor
 						insertNodeServidor(&cola_servidor_raiz,&cola_servidor_tope,eliminar);
 						numberDelayed = numberDelayed + 1;
 						lista_eventos = insertNode(lista_eventos,createNode(SALIDA,mc+reparar,contadorM+i));
@@ -179,11 +185,13 @@ void llegada(void){
 				i = i+1;
 			}
 		}else{
+			//Si hay eventos en cola y los servidores estan en cola solo se agrega y se aumenta el numero en cola
 			insertNodeServidor(&cola_servidor_raiz,&cola_servidor_tope,eliminar);
 			numCola = numCola + 1;
 		}
 	}
 	i=0;
+	//Cuando una maquina esta arruinada se le asigna un valor de -1 para manejar la salida.
 	while(i<(contadorM+contadorS)){
 		if(i<contadorM){
 			if(eliminar->numDeClock == i){
@@ -193,20 +201,27 @@ void llegada(void){
 		i = i+1;
 	}
 }
+/*Saca el evento de la cola del servidor, programa la siguiente llegada y si hay servidores desocupados y otras maquinas en cola empieza a atender al siguiente.-----*/
 void salida(void){
 	int server = eliminar->numDeClock, aux;
 	eliminar = NULL;
+	//Verifica si la cola no esta vacia
 	if(cola_servidor_raiz != NULL){
+		//Remueve el nodo de la cola y programa su siguiente llegada
 			removeNodeServidor(&cola_servidor_raiz,&cola_servidor_tope,&eliminar);
 			lista_eventos = insertNode(lista_eventos,createNode(LLEGADA,mc+arruinar,eliminar->numDeClock));
 			atendiendo = atendiendo -1;
 			aux = server-contadorM;
+			//Se cambia el estado del servidor a desocupado y se le asigna un valor de -1 para manejar la salida
 			estadoServidor[aux] = DESOCUPADO;
 			cl[server] = -1;
+			//Verifica si hay eventos en cola
 			if(numCola > 0){
 				i=0;
 				while(i<contadorS){
+					//Verifica si hay servidores desocupados
 						if(estadoServidor[i] == DESOCUPADO){
+							//Empieza a atenderlos y programa su salida
 							lista_eventos = insertNode(lista_eventos,createNode(SALIDA,mc+reparar,contadorM+i));
 							cl[contadorM+i] = mc+ reparar;
 							estadoServidor[i] = OCUPADO;
@@ -218,6 +233,7 @@ void salida(void){
 				}
 				numCola = numCola -1;
 			}
+			//Actualiza el valor del clock de la maquina que acaba  de salir del servidor
 			i=0;
 			while(i<(contadorM+contadorS)){
 				if(i<contadorM){
@@ -229,9 +245,9 @@ void salida(void){
 			}
 	}
 }
+/*Imprime los datos de los clocks de maquinas y serviores en forma de tabla en un documento txt externo-----*/
 void imprimirDatos(void){
 	int a;
-	/* Va a ir imprimiendo las variables clocks, el num en cola y el estado del servidor*/
 		fprintf(outfile,"	%.1f\t",mc);
 		i = 0;
 		while(i<(contadorM+contadorS)){
@@ -286,6 +302,7 @@ void imprimirDatos(void){
 		}
 		fprintf(outfile,"\t%i\t\n",numCola);
 }
+/*Imprime los datos de los estadisticos en un documento txt externo-----*/
 void imprimirEstadisticos(void){
 	fprintf(outfile,"\n\tNumber Delayed: %i",numberDelayed);
 }
