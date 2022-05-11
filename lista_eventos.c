@@ -7,6 +7,7 @@ struct node{
 	float clock;
 	float numDeClock;
 	struct node* next;
+	struct node* prev;
 };
 
 //Crea el nodo y le asigna los parametros
@@ -16,6 +17,7 @@ struct node* createNode(int type, float clock, float numDeClock){
 	nodePtr->clock = clock;
 	nodePtr->numDeClock = numDeClock;
 	nodePtr->next = NULL;
+	nodePtr->prev = NULL;
 	return nodePtr;
 }
 
@@ -23,20 +25,23 @@ struct node* createNode(int type, float clock, float numDeClock){
 struct node* insertNode(struct node* head, struct node* newNodePtr){
 	if (head == NULL){
 		return newNodePtr;
-	}else{
+	}else{  
 		if(head->clock > newNodePtr->clock){
 			newNodePtr->next = head;
+			head->prev = newNodePtr;
 			return newNodePtr;
 		}
 		else{
 			struct node* prev = NULL;
 			struct node* curr = head;
 			while((curr!=NULL) && (curr->clock <= newNodePtr->clock)){
-				prev = curr;
+				prev = curr; 
 				curr= curr->next;
 			}
 			prev->next = newNodePtr;
 			newNodePtr->next = curr;
+			newNodePtr ->prev = prev;
+			curr->prev=newNodePtr;
 			return head;
 		}
 	}
